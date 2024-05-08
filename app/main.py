@@ -9,8 +9,8 @@ def main():
     pong = "+PONG\r\n"
 
     with conn:
-        conn.recv(1024)
-        conn.send(pong.encode())
+        while conn.recv(1024):
+            conn.send(pong.encode())
         
 
 
