@@ -1,16 +1,27 @@
 import socket
+import threading
 
+pong = "+PONG\r\n"
+
+class thread(threading.Thread):
+    def __init__(self,thread_conn):
+        threading.Thread.__init__(self)
+        self.thread_conn = thread_conn
+
+    def run(self):
+        with self.thread_conn:
+            while self.thread_conn.recv(1024):
+                self.thread_conn.send(pong.encode())
 
 def main():
     
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
-    conn,adrr = server_socket.accept() # wait for client
 
-    pong = "+PONG\r\n"
+     # wait for client
 
-    with conn:
-        while conn.recv(1024):
-            conn.send(pong.encode())
+    while True:
+        conn,adrr = server_socket.accept()
+        thread(conn).start()
         
 
 
