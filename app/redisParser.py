@@ -78,6 +78,11 @@ class RedisParser:
                 
                 return RedisParser.decode.executeGet(val1)
             
+            if(cmnd=='INFO'):
+                header = lst[1]
+                return RedisParser.encode.bulk_string("role:master")
+
+
             if(cmnd=='PING'):
                 return RedisParser.encode.simple_string("PONG")
 

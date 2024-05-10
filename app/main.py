@@ -23,8 +23,8 @@ def main():
 
     port = 6379
 
-    if "--port" in args:
-        port = args[args.index("--port")+1]
+    if "--port" in args or "-p" in args:
+        port = args[args.index("--port"or"-p")+1]
         port = int(port)
 
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
