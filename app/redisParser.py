@@ -17,9 +17,17 @@ INFO = {
 
 class RedisParser:
     class encode :
-        def bulk_string(string):
 
-            
+        def encode_array(string):
+            length = len(string)
+            res = "*"+str(length)+"\r\n"
+            for x in string :
+                lengthString = str(len(x))                
+                res+="$"+lengthString+"\r\n"+x
+            res+="\r\n"
+            return res
+        
+        def bulk_string(string):  
             res="$"
             if(type(string) is list):
                 length = str(string[-1])

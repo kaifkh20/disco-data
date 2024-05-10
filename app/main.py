@@ -18,6 +18,11 @@ class thread(threading.Thread):
                 self.thread_conn.sendall(res.encode())
 
 
+def handshake(masterhost,masterport):
+     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+     client_socket.connect((masterhost,int(masterport)))
+     client_socket.send(RedisParser.encode.encode_array(['PING']).encode())
+
 
 def main():
     
@@ -29,10 +34,16 @@ def main():
         port = args[args.index("--port"or"-p")+1]
         port = int(port)
 
+    server_socket = socket.create_server(("localhost", port), reuse_port=True)
+
     if "--replicaof" in args:
          INFO.update({"role":"slave"})
+         masterhost = args[args.index("--replicaof")+1]
+         masterport = args[args.index("--replicaof")+2]
+         handshake(masterhost,masterport)
 
-    server_socket = socket.create_server(("localhost", port), reuse_port=True)
+
+    
 
      # wait for client
 
