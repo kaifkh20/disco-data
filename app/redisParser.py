@@ -3,14 +3,22 @@ import os
 from threading import Timer
 
 INFO = {
-    "role" : "master"
+    "role" : "master",
+    "master_replid":"",
+    "master_repl_offset":0
 }
 
 class RedisParser:
     class encode :
         def bulk_string(string):
-            length = str(len(string))
-            res = "$"+length+"\r\n"+string+"\r\n"
+
+            res="$"
+            if(type(string) is list):
+                for x in string:
+                    res += length+"\r\n"+x+"\r\n"
+            else:
+                length = str(len(string))
+                res += length+"\r\n"+string+"\r\n"
             return res
         
         def simple_string(string):
@@ -89,7 +97,7 @@ class RedisParser:
                 for k,v in INFO.items():
                     stringList.append(k+":"+v)
 
-                return RedisParser.encode.bulk_string(stringList[0])
+                return RedisParser.encode.bulk_string(stringList)
 
 
             if(cmnd=='PING'):

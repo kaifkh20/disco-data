@@ -2,6 +2,8 @@ import socket
 import threading
 from .redisParser import RedisParser,INFO
 import sys
+import string
+import secrets
 
 
 class thread(threading.Thread):
@@ -17,6 +19,11 @@ class thread(threading.Thread):
                 # print(res.encode())
                 self.thread_conn.send(res.encode())
 
+def create_random():
+    alphabet = string.ascii_letters + string.digits
+    random= ''.join(secrets.choice(alphabet) for i in range(40))
+    return random
+
 def main():
     
     args = sys.argv[1:]
@@ -28,7 +35,7 @@ def main():
         port = int(port)
 
     if "--replicaof" in args:
-         INFO.update({"role":"slave"})
+         INFO.update({"role":"slave"},{"master_replid":create_random()})
 
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
 
