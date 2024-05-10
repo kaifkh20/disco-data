@@ -1,7 +1,7 @@
 class RedisParser:
     class encode :
         def bulk_string(string):
-            length = len(string)
+            length = str(len(string))
             res = "$"+length+"\r\n"+string+"\r\n"
             return res
         
@@ -12,13 +12,11 @@ class RedisParser:
 
         def executeCommand(cmnd,lst):
             if(cmnd=='ECHO'):
-                  i = 0
-                  for x in lst:
-                    i+=1
-                    if i%2==0:   
-                        RedisParser().encode().bulk_string(x)
-            elif (cmnd=='+PING'):
-                res = RedisParser().encode().simple_string("PONG")
+                # print(lst[1])
+                word = lst[1]     
+                return RedisParser.encode.bulk_string(word)
+            elif (cmnd=='PING'):
+                res = RedisParser.encode.simple_string("PONG")
                 return res
                     
 
@@ -27,6 +25,6 @@ class RedisParser:
                 length = lst[0][1]
                 actLength = len(lst)
                 if(length==0): return
-                if(length==2): RedisParser().decode().executeCommand(lst[0],[])
                 cmnd = lst[2] 
-                RedisParser().decode().executeCommand(cmnd,lst[3-actLength::])
+                print(cmnd,length)
+                return RedisParser.decode.executeCommand(cmnd,lst[3-actLength::])
