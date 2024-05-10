@@ -1,6 +1,11 @@
 import json
 import os
 from threading import Timer
+
+INFO = {
+    "role" : "master"
+}
+
 class RedisParser:
     class encode :
         def bulk_string(string):
@@ -80,7 +85,11 @@ class RedisParser:
             
             if(cmnd=='INFO'):
                 header = lst[1]
-                return RedisParser.encode.bulk_string("role:master")
+                stringList = list()
+                for k,v in INFO.items():
+                    stringList.append(k+":"+v)
+
+                return RedisParser.encode.bulk_string(stringList[0])
 
 
             if(cmnd=='PING'):

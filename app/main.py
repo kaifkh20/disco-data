@@ -1,6 +1,6 @@
 import socket
 import threading
-from .redisParser import RedisParser
+from .redisParser import RedisParser,INFO
 import sys
 
 
@@ -26,6 +26,9 @@ def main():
     if "--port" in args or "-p" in args:
         port = args[args.index("--port"or"-p")+1]
         port = int(port)
+
+    if "--replicaof" in args:
+         INFO.update({"role":"slave"})
 
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
 
