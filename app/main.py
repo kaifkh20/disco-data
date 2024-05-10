@@ -1,6 +1,6 @@
 import socket
 import threading
-import redisParser
+from .redisParser import RedisParser
 
 
 
@@ -10,10 +10,10 @@ class thread(threading.Thread):
         self.thread_conn = thread_conn
 
     def run(self):
-        with self.thread_conn:
+        while self.thread_conn:
                 recv = self.thread_conn.recv(1024).decode()
                 # print(recv)
-                res = redisParser.RedisParser.decode.decodeArrays(recv)
+                res = RedisParser.decode.decodeArrays(recv)
                 # print(res.encode())
                 self.thread_conn.send(res.encode())
 

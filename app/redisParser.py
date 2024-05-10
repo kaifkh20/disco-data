@@ -26,5 +26,5 @@ class RedisParser:
                 actLength = len(lst)
                 if(length==0): return
                 cmnd = lst[2] 
-                print(cmnd,length)
+                # print(cmnd,length)
                 return RedisParser.decode.executeCommand(cmnd,lst[3-actLength::])
