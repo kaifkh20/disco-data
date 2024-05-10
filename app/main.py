@@ -1,5 +1,6 @@
 import socket
 import threading
+import redisParser
 
 pong = "+PONG\r\n"
 
@@ -11,7 +12,9 @@ class thread(threading.Thread):
     def run(self):
         with self.thread_conn:
             while self.thread_conn.recv(1024):
-                self.thread_conn.send(pong.encode())
+                recv = self.thread_conn.recv(1024).decode()
+                res = redisParser.RedisParser().decode().decodeArrays(recv)
+                self.thread_conn.send(res.encode())
 
 def main():
     
@@ -22,6 +25,7 @@ def main():
     while True:
         conn,adrr = server_socket.accept()
         thread(conn).start()
+        
         
 
 
