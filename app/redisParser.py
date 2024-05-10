@@ -1,21 +1,33 @@
 import json
 import os
 from threading import Timer
+import string
+import secrets
+
+def create_random():
+    alphabet = string.ascii_letters + string.digits
+    random= ''.join(secrets.choice(alphabet) for i in range(40))
+    return random
 
 INFO = {
     "role" : "master",
-    "master_replid":"",
-    "master_repl_offset":0
+    "master_replid":create_random(),
+    "master_repl_offset":"0"
 }
 
 class RedisParser:
     class encode :
         def bulk_string(string):
 
+            
             res="$"
             if(type(string) is list):
+                length = str(string[-1])
+                string.pop()
+                res+=length+"\r\n"
                 for x in string:
-                    res += length+"\r\n"+x+"\r\n"
+                    res += x
+                res+="\r\n"
             else:
                 length = str(len(string))
                 res += length+"\r\n"+string+"\r\n"
@@ -94,8 +106,12 @@ class RedisParser:
             if(cmnd=='INFO'):
                 header = lst[1]
                 stringList = list()
+                lengthString = 0
                 for k,v in INFO.items():
-                    stringList.append(k+":"+v)
+                    key_value_pair=k+":"+v
+                    lengthString+=len(key_value_pair)
+                    stringList.append(key_value_pair)
+                stringList.append(lengthString)
 
                 return RedisParser.encode.bulk_string(stringList)
 
