@@ -66,7 +66,7 @@ class RedisParser:
                 val2 = lst[3]
                 idxPXValue = 0
                 pxValid = False
-                if 'px' or 'PX' or 'pX' in lst:
+                if 'px' in lst or 'PX' in lst or 'pX' in lst:
                     idxPx = lst.index('px'or'PX'or'pX')
                     idxPXValue = lst[idxPx+2]
                     pxValid = True
