@@ -1,5 +1,6 @@
 import json
 import os
+from threading import Timer
 class RedisParser:
     class encode :
         def bulk_string(string):
@@ -15,7 +16,19 @@ class RedisParser:
             return "$-1\r\n"
     class decode:
 
-        def executeSet(val1,val2):
+        def executeSet(val1,val2,pxValue,pxValid):
+
+            def removeKey(delVal):
+                # print("reaching")
+                if os.path.exists('data.json'):
+                    with open('data.json') as f:
+                        json_data = json.load(f)
+                        # print(json_data)
+                        json_data.pop(delVal)
+                    with open('data.json','w') as f:
+                        json.dump(json_data,f)
+
+
             data = {val1:val2}
 
             if os.path.exists('data.json'):
@@ -28,7 +41,9 @@ class RedisParser:
             else :
                 with open('data.json', 'w+') as f:
                     json.dump(data,f,ensure_ascii=False)
-            
+
+            if(pxValid):
+                Timer(pxValue/1000,removeKey,(val1,)).start()
             return RedisParser.encode.simple_string("OK")
 
         def executeGet(val1):
@@ -49,10 +64,18 @@ class RedisParser:
             if(cmnd=='SET') : 
                 val1 = lst[1]
                 val2 = lst[3]
-                return RedisParser.decode.executeSet(val1,val2)
+                idxPXValue = 0
+                pxValid = False
+                if 'px' or 'PX' or 'pX' in lst:
+                    idxPx = lst.index('px'or'PX'or'pX')
+                    idxPXValue = lst[idxPx+2]
+                    pxValid = True
+
+                return RedisParser.decode.executeSet(val1,val2,int(idxPXValue),pxValid)
             
             if(cmnd=='GET'):
                 val1 = lst[1]
+                
                 return RedisParser.decode.executeGet(val1)
             
             if(cmnd=='PING'):
@@ -65,4 +88,4 @@ class RedisParser:
                 if(length==0): return
                 cmnd = lst[2] 
                 # print(cmnd,length)
-                return RedisParser.decode.executeCommand(cmnd,lst[3-actLength::])
+                return RedisParser.decode.executeCommand(str.upper(cmnd),lst[3-actLength::])
