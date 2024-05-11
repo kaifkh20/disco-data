@@ -126,6 +126,9 @@ class RedisParser:
 
             if(cmnd=='PING'):
                 return RedisParser.encode.simple_string("PONG")
+            
+            if(cmnd=='REPLCONF'):
+                return RedisParser.encode.simple_string("OK")
 
         def decodeSimpleString(string):
             lst = string.split("\r\n")
