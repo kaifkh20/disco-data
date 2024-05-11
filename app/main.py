@@ -25,8 +25,10 @@ def handshake(masterhost,masterport,listening_port):
      client_socket.send(RedisParser.encode.encode_array(['REPLCONF','listening-port',str(listening_port)]).encode())
      client_socket.recv(1024)
      client_socket.send(RedisParser.encode.encode_array(['REPLCONF','capa','psync2']).encode())
-     res = client_socket.recv(1024).decode()
-     print(RedisParser.decode.decodeSimpleString(res))
+     client_socket.recv(1024)
+    #  print(RedisParser.decode.decodeSimpleString(res))
+     client_socket.send(RedisParser.encode.encode_array(['PSYNC','?','-1']).encode())
+     client_socket.recv(1024)
 
 def main():
     
