@@ -23,8 +23,8 @@ class RedisParser:
             res = "*"+str(length)+"\r\n"
             for x in string :
                 lengthString = str(len(x))                
-                res+="$"+lengthString+"\r\n"+x
-            res+="\r\n"
+                res+="$"+lengthString+"\r\n"+x+"\r\n"
+            # res+="\r\n"
             return res
         
         def bulk_string(string):  
@@ -126,6 +126,11 @@ class RedisParser:
 
             if(cmnd=='PING'):
                 return RedisParser.encode.simple_string("PONG")
+
+        def decodeSimpleString(string):
+            lst = string.split("\r\n")
+            lst = lst[0].split("+")
+            return lst[1]
 
         def decodeArrays(string):
                 lst = string.split("\r\n")

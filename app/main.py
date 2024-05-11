@@ -2,7 +2,6 @@ import socket
 import threading
 from .redisParser import RedisParser,INFO
 import sys
-import struct
 
 
 class thread(threading.Thread):
@@ -18,11 +17,16 @@ class thread(threading.Thread):
                 self.thread_conn.sendall(res.encode())
 
 
-def handshake(masterhost,masterport):
+def handshake(masterhost,masterport,listening_port):
      client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
      client_socket.connect((masterhost,int(masterport)))
      client_socket.send(RedisParser.encode.encode_array(['PING']).encode())
-
+     client_socket.recv(1024).decode()
+     client_socket.send(RedisParser.encode.encode_array(['REPLCONF','listening-port',str(listening_port)]).encode())
+     client_socket.recv(1024)
+     client_socket.send(RedisParser.encode.encode_array(['REPLCONF','capa','psync2']).encode())
+     res = client_socket.recv(1024).decode()
+     print(RedisParser.decode.decodeSimpleString(res))
 
 def main():
     
@@ -40,7 +44,7 @@ def main():
          INFO.update({"role":"slave"})
          masterhost = args[args.index("--replicaof")+1]
          masterport = args[args.index("--replicaof")+2]
-         handshake(masterhost,masterport)
+         handshake(masterhost,masterport,port)
 
 
     
