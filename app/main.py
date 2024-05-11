@@ -14,7 +14,13 @@ class thread(threading.Thread):
                 recv = self.thread_conn.recv(1024).decode()
                 # print(recv)
                 res = RedisParser.decode.decodeArrays(recv)
-                self.thread_conn.sendall(res.encode())
+                if type(res) is list:
+                     for x in res:
+                          if type(x) is list:
+                            resSend = x[0].encode()+x[1]
+                            self.thread_conn.sendall(resSend)
+                          else :self.thread_conn.sendall(x.encode())
+                else:self.thread_conn.sendall(res.encode())
 
 
 def handshake(masterhost,masterport,listening_port):
@@ -28,7 +34,8 @@ def handshake(masterhost,masterport,listening_port):
      client_socket.recv(1024)
     #  print(RedisParser.decode.decodeSimpleString(res))
      client_socket.send(RedisParser.encode.encode_array(['PSYNC','?','-1']).encode())
-     client_socket.recv(1024)
+    #  client_socket.recv(1024)
+    #  client_socket.send(RedisParser.encode.encode_rdb().encode())
 
 def main():
     

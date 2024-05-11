@@ -3,6 +3,9 @@ import os
 from threading import Timer
 import string
 import secrets
+import base64
+
+EMPTY_RDB_FILE = b"UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog=="
 
 def create_random():
     alphabet = string.ascii_letters + string.digits
@@ -17,6 +20,14 @@ INFO = {
 
 class RedisParser:
     class encode :
+
+        def encode_rdb():
+            content = base64.b64decode(EMPTY_RDB_FILE)
+                # print(content)
+            # res = "".join(["{:08b}".format(x) for x in content])
+            # print("$"+str(content_size)+"\r\n"+res)
+            content_size = len(content)
+            return [f"${str(content_size)}\r\n",content]
 
         def encode_array(string):
             length = len(string)
@@ -125,12 +136,13 @@ class RedisParser:
 
 
             if(cmnd=='PING'):
+                
                 return RedisParser.encode.simple_string("PONG")
             
             if(cmnd=='REPLCONF'):
                 return RedisParser.encode.simple_string("OK")
             if(cmnd=='PSYNC'):
-                return RedisParser.encode.simple_string("FULLRESYNC "+INFO.get("master_replid")+" "+INFO.get("master_repl_offset"))
+                return [RedisParser.encode.simple_string("FULLRESYNC "+INFO.get("master_replid")+" "+INFO.get("master_repl_offset")),RedisParser.encode.encode_rdb()]
 
         def decodeSimpleString(string):
             lst = string.split("\r\n")
