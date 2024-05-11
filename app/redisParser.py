@@ -129,6 +129,8 @@ class RedisParser:
             
             if(cmnd=='REPLCONF'):
                 return RedisParser.encode.simple_string("OK")
+            if(cmnd=='PSYNC'):
+                return RedisParser.encode.simple_string("FULLRESYNC "+INFO.get("master_replid")+" "+INFO.get("master_repl_offset"))
 
         def decodeSimpleString(string):
             lst = string.split("\r\n")
