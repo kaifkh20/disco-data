@@ -4,12 +4,19 @@ from .redisParser import RedisParser,INFO
 import sys
 
 
+replicas_addr = []
+replica_true = False
+
 class thread(threading.Thread):
-    def __init__(self,thread_conn):
+    def __init__(self,thread_conn,thread_adrr,server_socket):
         threading.Thread.__init__(self)
         self.thread_conn = thread_conn
+        self.thread_adrr = thread_adrr
+        self.server_socket = server_socket
 
     def run(self):
+        global replica_true
+        global replicas_addr
         while self.thread_conn:
                 recv = self.thread_conn.recv(1024).decode()
                 # print(recv)
@@ -19,8 +26,15 @@ class thread(threading.Thread):
                           if type(x) is list:
                             resSend = x[0].encode()+x[1]
                             self.thread_conn.sendall(resSend)
+                            replicas_addr.append(self.thread_conn)
+                            replica_true = True
                           else :self.thread_conn.sendall(x.encode())
-                else:self.thread_conn.sendall(res.encode())
+                else:
+                    self.thread_conn.sendall(res.encode())
+                    if replica_true:
+                        for conn in replicas_addr:
+                            conn.sendall(RedisParser.decode.decodeArrays(recv,True).encode())
+                            
 
 
 def handshake(masterhost,masterport,listening_port):
@@ -62,7 +76,7 @@ def main():
 
     while True:
         conn,adrr = server_socket.accept()
-        thread(conn).start()
+        thread(conn,adrr,server_socket).start()
         
         
 

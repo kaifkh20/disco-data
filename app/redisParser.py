@@ -21,6 +21,16 @@ INFO = {
 class RedisParser:
     class encode :
 
+        def encode_replica_bulk_string(cmnd,lst):
+            res_lst = [cmnd]
+            i = 1
+            for x in lst:
+                if i%2==0:
+                    res_lst.append(x)
+                i+=1
+            return RedisParser.encode.encode_array(res_lst)
+
+
         def encode_rdb():
             content = base64.b64decode(EMPTY_RDB_FILE)
                 # print(content)
@@ -98,7 +108,7 @@ class RedisParser:
                 return RedisParser.encode.simple_string(obj_val)
             except:
                 return RedisParser.encode.null()
-        def executeCommand(cmnd,lst):
+        def executeCommand(cmnd,lst,replica=False):
             print(cmnd,lst)
             if(cmnd=='ECHO'):
                 # print(lst[1])
@@ -106,6 +116,11 @@ class RedisParser:
                 return RedisParser.encode.bulk_string(word)
             
             if(cmnd=='SET') : 
+
+                if replica:
+                    # print(RedisParser.encode.encode_array(lst))
+                    return RedisParser.encode.encode_replica_bulk_string(cmnd,lst)
+
                 val1 = lst[1]
                 val2 = lst[3]
                 idxPXValue = 0
@@ -149,11 +164,11 @@ class RedisParser:
             lst = lst[0].split("+")
             return lst[1]
 
-        def decodeArrays(string):
+        def decodeArrays(string,replica=False):
                 lst = string.split("\r\n")
                 length = lst[0][1]
                 actLength = len(lst)
                 if(length==0): return
                 cmnd = lst[2] 
-                # print(cmnd,length)
-                return RedisParser.decode.executeCommand(str.upper(cmnd),lst[3-actLength::])
+                # print(cmnd,length)    
+                return RedisParser.decode.executeCommand(str.upper(cmnd),lst[3-actLength::],replica)
