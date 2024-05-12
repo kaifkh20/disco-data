@@ -109,7 +109,7 @@ class RedisParser:
             except:
                 return RedisParser.encode.null()
         def executeCommand(cmnd,lst,replica=False):
-            print(cmnd,lst)
+            # print(cmnd,lst)
             if(cmnd=='ECHO'):
                 # print(lst[1])
                 word = lst[1]     
@@ -163,6 +163,13 @@ class RedisParser:
             lst = string.split("\r\n")
             lst = lst[0].split("+")
             return lst[1]
+
+        def decodeOnlyCommand(string):
+            lst = string.split("\r\n")
+            print(lst)
+            if len(lst)<=1: return ""
+            if len(lst)==2: return lst[0].split("+")[1]
+            return lst[2]
 
         def decodeArrays(string,replica=False):
                 lst = string.split("\r\n")
