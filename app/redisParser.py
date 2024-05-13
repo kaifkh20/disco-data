@@ -22,6 +22,7 @@ class RedisParser:
     class encode :
 
         def encode_replica_bulk_string(cmnd,lst):
+
             res_lst = [cmnd]
             i = 1
             for x in lst:
@@ -117,10 +118,6 @@ class RedisParser:
             
             if(cmnd=='SET') : 
 
-                if replica:
-                    # print(RedisParser.encode.encode_array(lst))
-                    return RedisParser.encode.encode_replica_bulk_string(cmnd,lst)
-
                 val1 = lst[1]
                 val2 = lst[3]
                 idxPXValue = 0
@@ -130,10 +127,21 @@ class RedisParser:
                     idxPXValue = lst[idxPx+2]
                     pxValid = True
 
+                
+                if replica:
+                    # print(RedisParser.encode.encode_array(lst))
+                    RedisParser.decode.executeSet(val1,val2,int(idxPXValue),pxValid)
+                    return RedisParser.encode.encode_replica_bulk_string(cmnd,lst)
+
+                
                 return RedisParser.decode.executeSet(val1,val2,int(idxPXValue),pxValid)
             
             if(cmnd=='GET'):
                 val1 = lst[1]
+
+                if replica:
+                    RedisParser.decode.executeGet(val1)
+                    return RedisParser.encode.encode_array(['GET',val1])
                 
                 return RedisParser.decode.executeGet(val1)
             
