@@ -39,20 +39,37 @@ class thread(threading.Thread):
                     else:
                         self.thread_conn.sendall(x.encode())
             else:
-                if not is_connection_replicate and cmnd=='SET' or cmnd=='GET':
+                if not is_connection_replicate and cmnd=='SET':
                     for conn in replicas_addr:
                         response = RedisParser.decode.decodeArrays(recv, True)
                         print("sent response")
-                        if cmnd=='GET':
-                            print(response)
                         conn.sendall(response.encode())
                 self.thread_conn.sendall(res.encode())
                 # self.thread_conn.close()
 
 
 
-
-def handshake(masterhost, masterport, listening_port):
+def handleHandshake(client_socket):
+    recv = ''
+    while True:
+        recv = client_socket.recv(1024)
+        
+        str_recv = str(recv)
+        print(str_recv)
+        if "SET" in str_recv or "INFO":
+            #print(str_recv)
+            break
+    res = recv.decode('cp1252').encode('utf-8').decode().split("*")
+    del res[0]
+    print(res)
+    for cmnd in res:
+        # print(cmnd)
+        t = threading.Thread(target=RedisParser.decode.decodeArrays,args=(cmnd,))
+        t.start()
+        
+        
+    print('handle handshake completed')
+def handshake(masterhost, masterport, listening_port,server_socket):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((masterhost, int(masterport)))
     print("connection established")
@@ -71,24 +88,27 @@ def handshake(masterhost, masterport, listening_port):
     client_socket.recv(1024)
     #  print(RedisParser.decode.decodeSimpleString(res))
     client_socket.send(RedisParser.encode.encode_array(["PSYNC", "?", "-1"]).encode())
-    
-    client_socket.recv(1024)
-    client_socket.recv(1024)
 
-    while client_socket:
-        recv = client_socket.recv(1024).decode()
-        res = RedisParser.decode.decodeArrays(recv)
-        print(recv)
-        print(res)
-        client_socket.sendall(res.encode())
-#  client_socket.recv(1024)
-#  client_socket.send(RedisParser.encode.encode_rdb().encode())
+    conn,addr = server_socket.accept()
+    t = threading.Thread(target=handleHandshake,args=(client_socket,))
+    t.start()
+    t.join()
+    thread(conn).start()
+    # while True:
+    #     conn,addr = server_socket.accept()
+    #     thr = thread(conn)
+    #     thr.start()
+    #     thr.join()
+    #client_socket.close()
+     # thread(conn).start()
+    #  client_socket.recv(1024)
+    #  client_socket.send(RedisParser.encode.encode_rdb().encode())
 
 
 def main():
 
     args = sys.argv[1:]
-
+ 
     port = 6379
 
     if "--port" in args or "-p" in args:
@@ -107,13 +127,20 @@ def main():
         string = string.split(" ")
         masterhost = string[0]
         masterport = string[1]
-        handshake(masterhost, masterport, port)
+        replica_of = True
+        print("replica statrted")
+        t = threading.Thread(target=handshake,args=(masterhost,masterport,port,server_socket))
+        t.start() 
+        t.join()
+        print("handshake complete")
+        
+    # wit for client
 
-    # wait for client
-
-    while True and not replica_of:
-        conn, adrr = server_socket.accept()
-        thread(conn).start()
+    while True:
+            if not replica_of:
+                conn, adrr = server_socket.accept()
+                thread(conn).start()
+                print('connection established')
 
 
 if __name__ == "__main__":

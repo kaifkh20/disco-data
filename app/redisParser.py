@@ -180,10 +180,11 @@ class RedisParser:
             return lst[2]
 
         def decodeArrays(string,replica=False):
+                # print(string)
                 lst = string.split("\r\n")
-                length = lst[0][1]
                 actLength = len(lst)
-                if(length==0): return
+                if(actLength==0): return
+                # print(lst)
                 cmnd = lst[2] 
                 # print(cmnd,length)    
                 return RedisParser.decode.executeCommand(str.upper(cmnd),lst[3-actLength::],replica)
