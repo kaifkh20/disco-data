@@ -163,6 +163,8 @@ class RedisParser:
                 return RedisParser.encode.simple_string("PONG")
             
             if(cmnd=='REPLCONF'):
+                if 'GETACK' in lst:
+                    return RedisParser.encode.encode_array([cmnd,'ACK','0'])
                 return RedisParser.encode.simple_string("OK")
             if(cmnd=='PSYNC'):
                 return [RedisParser.encode.simple_string("FULLRESYNC "+INFO.get("master_replid")+" "+INFO.get("master_repl_offset")),RedisParser.encode.encode_rdb()]

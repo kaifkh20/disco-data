@@ -1,6 +1,8 @@
 import socket
 import sys
 import threading
+import  concurrent.futures
+import select
 
 from .redisParser import INFO, RedisParser
 
@@ -48,27 +50,47 @@ class thread(threading.Thread):
                 # self.thread_conn.close()
 
 
+def handlePropogation(client_socket,recv):
+#    recv = client_socket.recv(1024).decode()
+    #print(recv,'This is recieving')
+    splitted_recv = recv.split("*")
+    print(splitted_recv)
+    for cmnd in splitted_recv:
+        print('reaching in for loop')
+        if cmnd=='\r\n' or cmnd=='':continue
+        RedisParser.decode.decodeArrays(cmnd)
 
-def handleHandshake(client_socket):
+def handleHandshake(client_socket,server_socket):
     recv = ''
     while True:
         recv = client_socket.recv(1024)
         
         str_recv = str(recv)
         print(str_recv)
-        if "SET" in str_recv or "INFO":
+        if "*" in str_recv:
             #print(str_recv)
             break
     res = recv.decode('cp1252').encode('utf-8').decode().split("*")
     del res[0]
     print(res)
     for cmnd in res:
+        if cmnd=='\r\n':
+            continue
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            
+            future = executor.submit(RedisParser.decode.decodeArrays,cmnd)
+            response = future.result()
+            print(response)
+            if 'REPLCONF' in response:
+                client_socket.sendall(response.encode())
         # print(cmnd)
-        t = threading.Thread(target=RedisParser.decode.decodeArrays,args=(cmnd,))
-        t.start()
-        
-        
-    print('handle handshake completed')
+    print('handshake completed')
+    #conn,addr = server_socket.accept()
+    recv = client_socket.recv(1024).decode()
+    while recv!="":
+        threading.Thread(target=handlePropogation,args=(client_socket,recv,)).start()
+        recv = client_socket.recv(1024).decode
+    #thread(conn).start()
 def handshake(masterhost, masterport, listening_port,server_socket):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((masterhost, int(masterport)))
@@ -89,11 +111,23 @@ def handshake(masterhost, masterport, listening_port,server_socket):
     #  print(RedisParser.decode.decodeSimpleString(res))
     client_socket.send(RedisParser.encode.encode_array(["PSYNC", "?", "-1"]).encode())
 
-    conn,addr = server_socket.accept()
-    t = threading.Thread(target=handleHandshake,args=(client_socket,))
-    t.start()
-    t.join()
-    thread(conn).start()
+    server_socket.setblocking(False)
+    while True:
+        readable,_,_ = select.select([server_socket],[],[],1)
+        if(not readable):    
+            t = threading.Thread(target=handleHandshake,args=(client_socket,server_socket,))
+            t.start()
+            break
+        if(readable):
+            conn,addr = server_socket.accept()
+            t = threading.Thread(target=handleHandshake,args=(client_socket,server_socket,))
+            t.start()
+            thread(conn).start()
+            break
+    #conn,addr = server_socket.accept()
+
+    # conn,addr = server_socket.accept()
+    #thread(conn).start()
     # while True:
     #     conn,addr = server_socket.accept()
     #     thr = thread(conn)
@@ -132,7 +166,7 @@ def main():
         t = threading.Thread(target=handshake,args=(masterhost,masterport,port,server_socket))
         t.start() 
         t.join()
-        print("handshake complete")
+        #print("handshake complete")
         
     # wit for client
 
