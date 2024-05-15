@@ -24,7 +24,7 @@ class RedisParser:
     class encode :
 
         def encode_integer(num):
-            res = f"{num}\r\n"
+            res = f":{num}\r\n"
             return res
 
         def encode_replica_bulk_string(cmnd,lst):
