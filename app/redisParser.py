@@ -23,6 +23,10 @@ BYTES_RECIEVED = 0
 class RedisParser:
     class encode :
 
+        def encode_integer(num):
+            res = f"{num}\r\n"
+            return res
+
         def encode_replica_bulk_string(cmnd,lst):
 
             res_lst = [cmnd]
@@ -174,6 +178,9 @@ class RedisParser:
                 return RedisParser.encode.simple_string("OK")
             if(cmnd=='PSYNC'):
                 return [RedisParser.encode.simple_string("FULLRESYNC "+INFO.get("master_replid")+" "+INFO.get("master_repl_offset")),RedisParser.encode.encode_rdb()]
+            
+            if(cmnd=='WAIT'):
+                return RedisParser.encode.encode_integer(num=0)
 
         def decodeSimpleString(string):
             lst = string.split("\r\n")
