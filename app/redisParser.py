@@ -18,6 +18,8 @@ INFO = {
     "master_repl_offset":"0"
 }
 
+BYTES_RECIEVED = 0
+
 class RedisParser:
     class encode :
 
@@ -70,9 +72,11 @@ class RedisParser:
         def null():
             return "$-1\r\n"
     class decode:
+        
+
 
         def executeSet(val1,val2,pxValue,pxValid):
-
+    
             def removeKey(delVal):
                 # print("reaching")
                 if os.path.exists('data.json'):
@@ -109,8 +113,9 @@ class RedisParser:
                 return RedisParser.encode.simple_string(obj_val)
             except:
                 return RedisParser.encode.null()
-        def executeCommand(cmnd,lst,replica=False):
+        def executeCommand(cmnd,lst,replica=False,bytes_recv=0):
             # print(cmnd,lst)
+            global BYTES_RECIEVED
             if(cmnd=='ECHO'):
                 # print(lst[1])
                 word = lst[1]     
@@ -164,7 +169,8 @@ class RedisParser:
             
             if(cmnd=='REPLCONF'):
                 if 'GETACK' in lst:
-                    return RedisParser.encode.encode_array([cmnd,'ACK','0'])
+                    BYTES_RECIEVED=bytes_recv
+                    return RedisParser.encode.encode_array([cmnd,'ACK',str(BYTES_RECIEVED)])
                 return RedisParser.encode.simple_string("OK")
             if(cmnd=='PSYNC'):
                 return [RedisParser.encode.simple_string("FULLRESYNC "+INFO.get("master_replid")+" "+INFO.get("master_repl_offset")),RedisParser.encode.encode_rdb()]
@@ -181,7 +187,7 @@ class RedisParser:
             if len(lst)==2: return lst[0].split("+")[1]
             return lst[2]
 
-        def decodeArrays(string,replica=False):
+        def decodeArrays(string,replica=False,bytes_recv=0):
                 # print(string)
                 lst = string.split("\r\n")
                 actLength = len(lst)
@@ -189,4 +195,4 @@ class RedisParser:
                 # print(lst)
                 cmnd = lst[2] 
                 # print(cmnd,length)    
-                return RedisParser.decode.executeCommand(str.upper(cmnd),lst[3-actLength::],replica)
+                return RedisParser.decode.executeCommand(str.upper(cmnd),lst[3-actLength::],replica,bytes_recv)

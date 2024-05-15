@@ -4,12 +4,13 @@ import threading
 import  concurrent.futures
 import select
 
-from .redisParser import INFO, RedisParser
+from .redisParser import INFO, RedisParser,BYTES_RECIEVED
 
 replicas_addr = []
 replica_true = False
 buffered_commands_to_replicate = []
 
+BYTES_SENT = 0
 
 class thread(threading.Thread):
     def __init__(self, thread_conn):
@@ -51,20 +52,35 @@ class thread(threading.Thread):
 
 
 def handlePropogation(client_socket,recv):
-#    recv = client_socket.recv(1024).decode()
+    global BYTES_SENT 
+    bytes_recv = 0
+    # wrecv = client_socket.recv(1024).decode()
     #print(recv,'This is recieving')
     splitted_recv = recv.split("*")
     print(splitted_recv)
+    
     for cmnd in splitted_recv:
+        bytes_recv = 0
         print('reaching in for loop')
         if cmnd=='\r\n' or cmnd=='':continue
-        RedisParser.decode.decodeArrays(cmnd)
-
+        #bytes_recv+=len(cmnd)+1
+        if not 'REPLCONF' in cmnd:
+            bytes_recv+=(len(cmnd)+1)
+            BYTES_SENT += bytes_recv
+        res = RedisParser.decode.decodeArrays(cmnd,False,BYTES_SENT)
+        # print(bytes_recv,"bytes_recv")
+        if 'REPLCONF' in res:
+            client_socket.sendall(res.encode())
+            bytes_recv+=37
+            BYTES_SENT += bytes_recv
+        print('total bytes now after propogation',BYTES_SENT)
 def handleHandshake(client_socket,server_socket):
+    global BYTES_SENT
+    #bytes_recv = 0
     recv = ''
     while True:
         recv = client_socket.recv(1024)
-        
+            
         str_recv = str(recv)
         print(str_recv)
         if "*" in str_recv:
@@ -74,22 +90,33 @@ def handleHandshake(client_socket,server_socket):
     del res[0]
     print(res)
     for cmnd in res:
+        bytes_recv =0
         if cmnd=='\r\n':
             continue
         with concurrent.futures.ThreadPoolExecutor() as executor:
+            #bytes_recv+= len(cmnd)+1
             
-            future = executor.submit(RedisParser.decode.decodeArrays,cmnd)
+            #print(cmnd)
+            if not 'REPLCONF' in cmnd:
+                bytes_recv+=(len(cmnd)+1)
+            # print(bytes_recv,"bytes recv")
+                BYTES_SENT += bytes_recv
+            future = executor.submit(RedisParser.decode.decodeArrays,cmnd,False,BYTES_SENT)
             response = future.result()
             print(response)
             if 'REPLCONF' in response:
                 client_socket.sendall(response.encode())
-        # print(cmnd)
+                bytes_recv+=37
+                BYTES_SENT += bytes_recv #adding replconf size harcoding
+            print('total bytes now after handshake',BYTES_SENT)
     print('handshake completed')
     #conn,addr = server_socket.accept()
     recv = client_socket.recv(1024).decode()
     while recv!="":
-        threading.Thread(target=handlePropogation,args=(client_socket,recv,)).start()
-        recv = client_socket.recv(1024).decode
+        t = threading.Thread(target=handlePropogation,args=(client_socket,recv,))
+        t.start()
+        t.join()
+        recv = client_socket.recv(1024).decode()
     #thread(conn).start()
 def handshake(masterhost, masterport, listening_port,server_socket):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
