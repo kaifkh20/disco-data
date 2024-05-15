@@ -20,6 +20,10 @@ INFO = {
 
 BYTES_RECIEVED = 0
 
+class RedisReplica:
+    NO_OF_REPLICAS = 0
+
+
 class RedisParser:
     class encode :
 
@@ -180,7 +184,7 @@ class RedisParser:
                 return [RedisParser.encode.simple_string("FULLRESYNC "+INFO.get("master_replid")+" "+INFO.get("master_repl_offset")),RedisParser.encode.encode_rdb()]
             
             if(cmnd=='WAIT'):
-                return RedisParser.encode.encode_integer(num=0)
+                return RedisParser.encode.encode_integer(num=RedisReplica.NO_OF_REPLICAS)
 
         def decodeSimpleString(string):
             lst = string.split("\r\n")

@@ -4,13 +4,14 @@ import threading
 import  concurrent.futures
 import select
 
-from .redisParser import INFO, RedisParser,BYTES_RECIEVED
+from .redisParser import INFO, RedisParser,RedisReplica
 
 replicas_addr = []
 replica_true = False
 buffered_commands_to_replicate = []
 
 BYTES_SENT = 0
+
 
 class thread(threading.Thread):
     def __init__(self, thread_conn):
@@ -22,6 +23,7 @@ class thread(threading.Thread):
         global replicas_addr
         global buffered_commands_to_replicate
         is_connection_replicate = False
+        global num_replica
         while self.thread_conn:
             recv = self.thread_conn.recv(1024).decode()
             # print(recv)
@@ -39,6 +41,8 @@ class thread(threading.Thread):
                         replicas_addr.append(self.thread_conn)
                         replica_true = True
                         is_connection_replicate = True
+                        #num_replica+=1
+                        RedisReplica.NO_OF_REPLICAS+=1
                     else:
                         self.thread_conn.sendall(x.encode())
             else:
