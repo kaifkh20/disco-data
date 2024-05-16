@@ -22,7 +22,7 @@ BYTES_RECIEVED = 0
 
 class RedisReplica:
     NO_OF_REPLICAS = 0
-
+    NO_OF_REPLICAS_ACK = 0
 
 class RedisParser:
     class encode :
@@ -81,6 +81,9 @@ class RedisParser:
             return "$-1\r\n"
     class decode:
         
+        def executeWait(if_done):
+            if_done[0] = True
+            # return RedisParser.encode.encode_integer(num=RedisReplica.NO_OF_REPLICAS_ACK)
 
 
         def executeSet(val1,val2,pxValue,pxValid):
@@ -184,7 +187,23 @@ class RedisParser:
                 return [RedisParser.encode.simple_string("FULLRESYNC "+INFO.get("master_replid")+" "+INFO.get("master_repl_offset")),RedisParser.encode.encode_rdb()]
             
             if(cmnd=='WAIT'):
-                return RedisParser.encode.encode_integer(num=RedisReplica.NO_OF_REPLICAS)
+                print("It's reaching here")
+                rep = lst[1]
+                time = int(lst[3])
+                if_done = [False]
+                matched = True
+                timer = Timer(time/1000,function=RedisParser.decode.executeWait,args=(if_done,))
+                timer.start()
+                while not int(rep)<=RedisReplica.NO_OF_REPLICAS_ACK:
+                    #print('reaching in loop')
+                    if (if_done[0]==True):
+                        break
+                #timer.join()
+                print(RedisReplica.NO_OF_REPLICAS_ACK,"no of replica ack")
+                if matched:
+                    num = int(rep)
+                else : num = RedisReplica.NO_OF_REPLICAS_ACK
+                return RedisParser.encode.encode_integer(num)
 
         def decodeSimpleString(string):
             lst = string.split("\r\n")
@@ -202,6 +221,7 @@ class RedisParser:
                 # print(string)
                 lst = string.split("\r\n")
                 actLength = len(lst)
+                if lst == [''] : return 
                 if(actLength==0): return
                 # print(lst)
                 cmnd = lst[2] 

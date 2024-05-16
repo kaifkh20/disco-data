@@ -11,6 +11,7 @@ replica_true = False
 buffered_commands_to_replicate = []
 
 BYTES_SENT = 0
+# NO_OF_REPLICAS_ACK = 0
 
 
 class thread(threading.Thread):
@@ -24,11 +25,13 @@ class thread(threading.Thread):
         global buffered_commands_to_replicate
         is_connection_replicate = False
         global num_replica
+        # global NO_OF_REPLICAS_ACK
         while self.thread_conn:
             recv = self.thread_conn.recv(1024).decode()
             # print(recv)
             cmnd = RedisParser.decode.decodeOnlyCommand(recv)
-            res = RedisParser.decode.decodeArrays(recv)
+            if cmnd!='WAIT':
+                res = RedisParser.decode.decodeArrays(recv)
             # if replica_true==True and cmnd=='SET':
             #     # while replica_true==True and cmnd=='SET':
             #     buffered_commands_to_replicate.append(recv)
@@ -46,11 +49,19 @@ class thread(threading.Thread):
                     else:
                         self.thread_conn.sendall(x.encode())
             else:
-                if not is_connection_replicate and cmnd=='SET':
-                    for conn in replicas_addr:
-                        response = RedisParser.decode.decodeArrays(recv, True)
-                        print("sent response")
-                        conn.sendall(response.encode())
+                if not is_connection_replicate and cmnd=='SET' or cmnd=='WAIT':
+                    if cmnd=='WAIT':
+                        while True:
+                            res = RedisParser.decode.decodeArrays(recv)
+                            break
+                    else :    
+                        for conn in replicas_addr:
+                            response = RedisParser.decode.decodeArrays(recv, True)
+                            print("sent response",str(response))
+                            conn.sendall(response.encode())
+                        # NO_OF_REPLICAS_ACK+=1
+                            RedisReplica.NO_OF_REPLICAS_ACK+=1
+                            conn.sendall('*3\r\n$8\r\nreplconf\r\n$6\r\nGETACK\r\n$1\r\n*\r\n'.encode())
                 self.thread_conn.sendall(res.encode())
                 # self.thread_conn.close()
 
@@ -100,7 +111,7 @@ def handleHandshake(client_socket,server_socket):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             #bytes_recv+= len(cmnd)+1
             
-            #print(cmnd)
+            #print(cmnd0)
             if not 'REPLCONF' in cmnd:
                 bytes_recv+=(len(cmnd)+1)
             # print(bytes_recv,"bytes recv")
