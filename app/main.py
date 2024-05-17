@@ -18,17 +18,20 @@ class thread(threading.Thread):
     def __init__(self, thread_conn):
         threading.Thread.__init__(self)
         self.thread_conn = thread_conn
-
+        
     def run(self):
         global replica_true
         global replicas_addr
         global buffered_commands_to_replicate
         is_connection_replicate = False
         global num_replica
+        no_of_commands_progpogated = 0
+        wait_command = False
         # global NO_OF_REPLICAS_ACK
         while self.thread_conn:
             recv = self.thread_conn.recv(1024).decode()
-            print('This is what master recieved',recv)
+            if recv=='':
+                continue
             cmnd = RedisParser.decode.decodeOnlyCommand(recv)
             res = ''
             if cmnd!='WAIT':
@@ -52,9 +55,13 @@ class thread(threading.Thread):
             else:
                 if not is_connection_replicate and cmnd=='SET' or cmnd=='WAIT':
                     if cmnd=='WAIT':
-                        while True:
-                            res = RedisParser.decode.decodeArrays(recv)
-                            break
+                            wait_command = True
+                            for conn in replicas_addr:
+                                conn.sendall('*3\r\n$8\r\nreplconf\r\n$6\r\nGETACK\r\n$1\r\n*\r\n'.encode())
+                            if(no_of_commands_progpogated==0):
+                                res = RedisParser.encode.encode_integer(RedisReplica.NO_OF_REPLICAS)
+                            else : res = RedisParser.decode.decodeArrays(recv)
+                            
                     else :  
                         i = 1
                         for conn in replicas_addr:
@@ -63,14 +70,18 @@ class thread(threading.Thread):
                             #print("sent response",str(response))
                             conn.sendall(response.encode())
                         # NO_OF_REPLICAS_ACK+=1
-                            conn.sendall('*3\r\n$8\r\nreplconf\r\n$6\r\nGETACK\r\n$1\r\n*\r\n'.encode())
-                            RedisReplica.NO_OF_REPLICAS_ACK+=1
+                            no_of_commands_progpogated+=1
+                            #if wait_command == True:
+                            #conn.sendall('*3\r\n$8\r\nreplconf\r\n$6\r\nGETACK\r\n$1\r\n*\r\n'.encode()
+                            # RedisReplica.NO_OF_REPLICAS_ACK+=1
+                                        
                             # if i==1:
                             #  conn.recv(1024)
             
                             # i+=1
 
                 if cmnd=='REPLCONF' and 'ACK' in recv:
+                    RedisReplica.NO_OF_REPLICAS_ACK+=1
                     res = None
                 if res is not None:
                     self.thread_conn.sendall(res.encode())

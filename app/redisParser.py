@@ -201,6 +201,7 @@ class RedisParser:
                 while not int(rep)<=RedisReplica.NO_OF_REPLICAS_ACK:
                     #print('reaching in loop')
                     if (if_done[0]==True):
+                        matched = False
                         break
                 #timer.join()
                 print(RedisReplica.NO_OF_REPLICAS_ACK,"no of replica ack")
