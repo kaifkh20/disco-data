@@ -4,7 +4,7 @@ import threading
 import  concurrent.futures
 import select
 
-from .redisParser import INFO, RedisParser,RedisReplica
+from .redisParser import INFO, RDB, RedisParser,RedisReplica
 
 replicas_addr = []
 replica_true = False
@@ -28,8 +28,9 @@ class thread(threading.Thread):
         # global NO_OF_REPLICAS_ACK
         while self.thread_conn:
             recv = self.thread_conn.recv(1024).decode()
-            # print(recv)
+            print('This is what master recieved',recv)
             cmnd = RedisParser.decode.decodeOnlyCommand(recv)
+            res = ''
             if cmnd!='WAIT':
                 res = RedisParser.decode.decodeArrays(recv)
             # if replica_true==True and cmnd=='SET':
@@ -54,16 +55,26 @@ class thread(threading.Thread):
                         while True:
                             res = RedisParser.decode.decodeArrays(recv)
                             break
-                    else :    
+                    else :  
+                        i = 1
                         for conn in replicas_addr:
+                            #print('this is what I recieved',recv)
                             response = RedisParser.decode.decodeArrays(recv, True)
-                            print("sent response",str(response))
+                            #print("sent response",str(response))
                             conn.sendall(response.encode())
                         # NO_OF_REPLICAS_ACK+=1
-                            RedisReplica.NO_OF_REPLICAS_ACK+=1
                             conn.sendall('*3\r\n$8\r\nreplconf\r\n$6\r\nGETACK\r\n$1\r\n*\r\n'.encode())
-                self.thread_conn.sendall(res.encode())
-                # self.thread_conn.close()
+                            RedisReplica.NO_OF_REPLICAS_ACK+=1
+                            # if i==1:
+                            #  conn.recv(1024)
+            
+                            # i+=1
+
+                if cmnd=='REPLCONF' and 'ACK' in recv:
+                    res = None
+                if res is not None:
+                    self.thread_conn.sendall(res.encode())
+                    # self.thread_conn.close()
 
 
 def handlePropogation(client_socket,recv):
@@ -194,6 +205,12 @@ def main():
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
 
     replica_of = False
+
+    if "--dir" in args and "--dbfilename" in args:
+        dir = args[args.index("--dir") + 1]
+        dbfilename = args[args.index("--dbfilename") + 1]
+        RDB.DIR = dir
+        RDB.DB_FILE_NAME = dbfilename
 
     if "--replicaof" in args:
         INFO.update({"role": "slave"})

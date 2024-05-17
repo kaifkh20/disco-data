@@ -20,6 +20,10 @@ INFO = {
 
 BYTES_RECIEVED = 0
 
+class RDB:
+    DIR = ""
+    DB_FILE_NAME = ""
+
 class RedisReplica:
     NO_OF_REPLICAS = 0
     NO_OF_REPLICAS_ACK = 0
@@ -203,7 +207,17 @@ class RedisParser:
                 if matched:
                     num = int(rep)
                 else : num = RedisReplica.NO_OF_REPLICAS_ACK
-                return RedisParser.encode.encode_integer(num)
+                res = RedisParser.encode.encode_integer(num)
+                RedisReplica.NO_OF_REPLICAS_ACK = 0
+                return res
+            if cmnd=='CONFIG':
+                get = lst[1]
+                value = lst[3]
+                    
+                if value=='dir':
+                    return RedisParser.encode.encode_array(['dir',RDB.DIR])
+                elif value=='dbfilename':
+                    return RedisParser.encode.encode_array(['dbfilename'])
 
         def decodeSimpleString(string):
             lst = string.split("\r\n")
@@ -212,7 +226,7 @@ class RedisParser:
 
         def decodeOnlyCommand(string):
             lst = string.split("\r\n")
-            print(lst)
+            #print(lst)
             if len(lst)<=1: return ""
             if len(lst)==2: return lst[0].split("+")[1]
             return lst[2]
