@@ -4,6 +4,8 @@ from threading import Timer
 import string
 import secrets
 import base64
+from .rdbParser import RDB_PARSER
+
 
 EMPTY_RDB_FILE = b"UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog=="
 
@@ -23,7 +25,8 @@ BYTES_RECIEVED = 0
 class RDB:
     DIR = ""
     DB_FILE_NAME = ""
-
+    
+    
 class RedisReplica:
     NO_OF_REPLICAS = 0
     NO_OF_REPLICAS_ACK = 0
@@ -84,7 +87,12 @@ class RedisParser:
         def null():
             return "$-1\r\n"
     class decode:
-        
+            
+        def executeKeys():
+            print('This is reaching execute keys')
+            result = RDB_PARSER(RDB.DIR,RDB.DB_FILE_NAME).getKeys()
+            return result
+            
         def executeWait(if_done):
             if_done[0] = True
             # return RedisParser.encode.encode_integer(num=RedisReplica.NO_OF_REPLICAS_ACK)
@@ -219,7 +227,16 @@ class RedisParser:
                     return RedisParser.encode.encode_array(['dir',RDB.DIR])
                 elif value=='dbfilename':
                     return RedisParser.encode.encode_array(['dbfilename'])
-
+            
+            if cmnd=='KEYS':
+                key = lst[1]
+                # print(key)
+                print('this is reaching here')
+                if key=="*":
+                    res = RedisParser.decode.executeKeys()
+                print('This is the key',lst)
+                
+                return RedisParser.encode.encode_array(res) 
         def decodeSimpleString(string):
             lst = string.split("\r\n")
             lst = lst[0].split("+")
@@ -239,6 +256,7 @@ class RedisParser:
                 if lst == [''] : return 
                 if(actLength==0): return
                 # print(lst)
-                cmnd = lst[2] 
-                # print(cmnd,length)    
+                cmnd = lst[2]
+                # print(lst)
+                   
                 return RedisParser.decode.executeCommand(str.upper(cmnd),lst[3-actLength::],replica,bytes_recv)
