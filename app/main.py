@@ -222,6 +222,7 @@ def main():
         dbfilename = args[args.index("--dbfilename") + 1]
         RDB.DIR = dir
         RDB.DB_FILE_NAME = dbfilename
+        RDB.EXECUTE_RDB = True
 
     if "--replicaof" in args:
         INFO.update({"role": "slave"})

@@ -25,7 +25,7 @@ BYTES_RECIEVED = 0
 class RDB:
     DIR = ""
     DB_FILE_NAME = ""
-    
+    EXECUTE_RDB = False
     
 class RedisReplica:
     NO_OF_REPLICAS = 0
@@ -128,7 +128,12 @@ class RedisParser:
                 Timer(pxValue/1000,removeKey,(val1,)).start()
             return RedisParser.encode.simple_string("OK")
 
-        def executeGet(val1):
+        def executeGet(self,val1):
+            if RDB.EXECUTE_RDB:
+                result = self.executeKeys()
+                value = result[f'{val1}']
+                return RedisParser.encode.bulk_string(value)
+
             with open('data.json') as f:
                 json_data = json.load(f)
             try :
