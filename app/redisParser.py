@@ -128,11 +128,10 @@ class RedisParser:
                 Timer(pxValue/1000,removeKey,(val1,)).start()
             return RedisParser.encode.simple_string("OK")
 
-        def executeGet(self,val1):
+        def executeGet(val1):
             if RDB.EXECUTE_RDB:
-                result = self.executeKeys()
-                value = result[f'{val1}']
-                return RedisParser.encode.bulk_string(value)
+                result = RDB_PARSER(RDB.DIR,RDB.DB_FILE_NAME).getKeyByValue(key=val1)
+                return RedisParser.encode.bulk_string(result)
 
             with open('data.json') as f:
                 json_data = json.load(f)

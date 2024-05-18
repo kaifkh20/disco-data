@@ -41,7 +41,7 @@ class RDB_PARSER:
             for x in data:
                 lengthKey = int(x[0])
                 l1 = x[1:lengthKey+1]
-                l2 = x[lengthKey:]
+                l2 = x[lengthKey+1:]
 
                 key = ''
                 value = ''
@@ -50,12 +50,13 @@ class RDB_PARSER:
                     key+=byt
 
 
-                
+                #print(l2)
                 if 'c0' in l2[0]:
                     value_integer = True
                     value = int(l2[1],16)
                     break
                 else:
+                    
                     l2.pop(0)
                     for byt in l2:
                         value+=byt
@@ -70,7 +71,7 @@ class RDB_PARSER:
             data = self.readDB()
             if data==b'':
                 return None
-            # print('the data is read')
+            #print('the data is read')
             trimmedData = self.trimTheContent(data)
             # print('data trimmed',trimmedData)
             key_dict = self.extractTheKeyValuePairs(trimmedData)
@@ -79,4 +80,10 @@ class RDB_PARSER:
             for k in key_dict:
                 result.append(k)
             return result
-
+        def getKeyByValue(self,key):
+            data = self.readDB()
+            if data==b'':
+                return None
+            trimmedData = self.trimTheContent(data)
+            key_dict = self.extractTheKeyValuePairs(trimmedData)
+            return key_dict[key]
