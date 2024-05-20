@@ -131,6 +131,8 @@ class RedisParser:
         def executeGet(val1):
             if RDB.EXECUTE_RDB:
                 result = RDB_PARSER(RDB.DIR,RDB.DB_FILE_NAME).getKeyByValue(key=val1)
+                if result==None:
+                    return RedisParser.encode.null()
                 return RedisParser.encode.bulk_string(result)
 
             with open('data.json') as f:

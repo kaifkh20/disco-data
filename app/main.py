@@ -4,7 +4,7 @@ import threading
 import  concurrent.futures
 import select
 
-from .redisParser import INFO, RDB, RedisParser,RedisReplica
+from .redisParser import INFO, RDB, RDB_PARSER, RedisParser,RedisReplica
 
 replicas_addr = []
 replica_true = False
@@ -223,6 +223,8 @@ def main():
         RDB.DIR = dir
         RDB.DB_FILE_NAME = dbfilename
         RDB.EXECUTE_RDB = True
+        rdb = RDB_PARSER(RDB.DIR,RDB.DB_FILE_NAME)
+        rdb.readAndStoreKey()
 
     if "--replicaof" in args:
         INFO.update({"role": "slave"})
