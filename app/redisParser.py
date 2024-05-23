@@ -139,6 +139,8 @@ class RedisParser:
                 json_data = json.load(f)
             try :
                 obj_val = json_data[val1]
+                if type(obj_val) is dict:
+                    obj_val = obj_val["type"]
                 return RedisParser.encode.simple_string(obj_val)
             except:
                 return RedisParser.encode.null()
@@ -251,6 +253,32 @@ class RedisParser:
                     return RedisParser.encode.simple_string("none")
                 else:
                     return RedisParser.encode.simple_string("string")
+            if cmnd == "XADD": 
+                cmnd_lst = []
+                for x in lst:
+                    if x != '' or x!=" ":
+                        cmnd_lst.append(x)
+
+                name = cmnd_lst.pop(0)
+                id = cmnd_lst.pop(0)
+
+                dict_key_value = {}
+
+                i = 0
+                while i<len(cmnd_lst):
+                    dict_key_value[f"{cmnd_lst[i]}"] = f"{cmnd_lst[i+1]}"
+                    i+=2
+                dict_key_value["id"] = id
+                data = {name:{"type":"stream","enteries":[dict_key_value]}}
+
+                with open('data.json') as f:
+                    json_data = json.load(f)
+                    if name in json_data:
+                        json_data[name]["enteries"].append(dict_key_value)
+                    else:
+                        json_data.update(data)
+                with open('data.json','w+') as f:
+                    json.dump(json_data,f)
         def decodeSimpleString(string):
             lst = string.split("\r\n")
             lst = lst[0].split("+")
