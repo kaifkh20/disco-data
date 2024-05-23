@@ -252,11 +252,13 @@ class RedisParser:
                 if(response==RedisParser.encode.null()):
                     return RedisParser.encode.simple_string("none")
                 else:
-                    return RedisParser.encode.simple_string("string")
+                    if response!="+stream\r\n":
+                        return RedisParser.encode.simple_string("string")
+                    return response
             if cmnd == "XADD": 
                 cmnd_lst = []
                 for x in lst:
-                    if x != '' or x!=" ":
+                    if x != '' and x[0]!='$':
                         cmnd_lst.append(x)
 
                 name = cmnd_lst.pop(0)
@@ -265,7 +267,7 @@ class RedisParser:
                 dict_key_value = {}
 
                 i = 0
-                while i<len(cmnd_lst):
+                while i<len(cmnd_lst)-1:
                     dict_key_value[f"{cmnd_lst[i]}"] = f"{cmnd_lst[i+1]}"
                     i+=2
                 dict_key_value["id"] = id
@@ -279,6 +281,8 @@ class RedisParser:
                         json_data.update(data)
                 with open('data.json','w+') as f:
                     json.dump(json_data,f)
+
+                return RedisParser.encode.bulk_string(id)
         def decodeSimpleString(string):
             lst = string.split("\r\n")
             lst = lst[0].split("+")
