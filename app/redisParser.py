@@ -242,7 +242,15 @@ class RedisParser:
                     res = RedisParser.decode.executeKeys()
                 print('This is the key',lst)
                 
-                return RedisParser.encode.encode_array(res) 
+                return RedisParser.encode.encode_array(res)
+
+            if cmnd=="TYPE":
+                val1 = lst[1]
+                response = RedisParser.decode.executeGet(val1=val1)
+                if(response==RedisParser.encode.null()):
+                    return RedisParser.encode.simple_string("none")
+                else:
+                    return RedisParser.encode.simple_string("string")
         def decodeSimpleString(string):
             lst = string.split("\r\n")
             lst = lst[0].split("+")
