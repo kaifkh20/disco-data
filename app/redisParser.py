@@ -34,6 +34,10 @@ class RedisReplica:
 class RedisParser:
     class encode :
 
+
+        def simple_error(err):
+            return f"-{err}\r\n"
+
         def encode_integer(num):
             res = f":{num}\r\n"
             return res
@@ -256,6 +260,22 @@ class RedisParser:
                         return RedisParser.encode.simple_string("string")
                     return response
             if cmnd == "XADD": 
+                def validate_id(id,name):
+                    with open('data.json') as f:
+                        json_data = json.load(f)
+                        if name not in json_data:
+                            f.close()
+                            return True
+                        enteries = json_data[name]["enteries"]
+                        for x in enteries:
+                            if 'id' in x:
+                                first_part = int(x['id'][0])
+                                second_part = int(x['id'][2])
+                                if x['id']==id or first_part>int(id[0]) or x['id']=='0-0'or (first_part==int(id[0]) and second_part>int(id[2])):
+                                    f.close()
+                                    return False
+                    f.close()
+                    return True
                 cmnd_lst = []
                 for x in lst:
                     if x != '' and x[0]!='$':
@@ -266,10 +286,18 @@ class RedisParser:
 
                 dict_key_value = {}
 
+                if(id=="0-0"):
+                    return RedisParser.encode.simple_error(err="ERR The ID specified in XADD must be greater than 0-0")
+
+                if(not validate_id(id=id,name=name)):
+                    return RedisParser.encode.simple_error(err="ERR The ID specified in XADD is equal or smaller than the target stream top item")
+                
                 i = 0
                 while i<len(cmnd_lst)-1:
                     dict_key_value[f"{cmnd_lst[i]}"] = f"{cmnd_lst[i+1]}"
                     i+=2
+                
+
                 dict_key_value["id"] = id
                 data = {name:{"type":"stream","enteries":[dict_key_value]}}
 
