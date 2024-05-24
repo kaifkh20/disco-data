@@ -3,6 +3,8 @@ import sys
 import threading
 import  concurrent.futures
 import select
+import atexit
+import os
 
 from .redisParser import INFO, RDB, RDB_PARSER, RedisParser,RedisReplica
 
@@ -250,6 +252,10 @@ def main():
                 print('connection established')
 
 
+def delete_file(name):
+    os.remove(name)
+
 if __name__ == "__main__":
     main()
+    atexit.register(delete_file,"../data.json")
     # atexit.register(lambda :)
