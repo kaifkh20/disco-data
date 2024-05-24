@@ -260,6 +260,28 @@ class RedisParser:
                         return RedisParser.encode.simple_string("string")
                     return response
             if cmnd == "XADD": 
+
+                def auto_generated_id(id,name):
+                    val1 = id[0]
+                    val2 = id[2]
+                    
+                    if val2!='*':
+                        return id
+                    else:
+                        val2 = -1
+                    with open('data.json') as f:
+                        json_data = json.load(f)
+                        if name not in json_data:
+                            f.close()
+                            if val1=='0':
+                                return f"{val1}-{1}"
+                            else:
+                                return f"{val1}-0"
+                        enteries = json_data[name]["enteries"]
+                        for x in enteries:
+                            if 'id' in x and x['id'][0]==val1:
+                                val2 = int(x['id'][2])
+                        return f"{val1}-{val2+1}"
                 def validate_id(id,name):
                     with open('data.json') as f:
                         json_data = json.load(f)
@@ -283,8 +305,11 @@ class RedisParser:
 
                 name = cmnd_lst.pop(0)
                 id = cmnd_lst.pop(0)
-
+        
+                id = auto_generated_id(id,name)
                 dict_key_value = {}
+                
+                print("id after autogeneration",id)
 
                 if(id=="0-0"):
                     return RedisParser.encode.simple_error(err="ERR The ID specified in XADD must be greater than 0-0")
