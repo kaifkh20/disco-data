@@ -4,6 +4,7 @@ from threading import Timer
 import string
 import secrets
 import base64
+from time import time
 from .rdbParser import RDB_PARSER
 
 
@@ -262,6 +263,11 @@ class RedisParser:
             if cmnd == "XADD": 
 
                 def auto_generated_id(id,name):
+                    global time
+                    if id=="*":
+                        val1 = int(time()*1000.0)
+                        val2 = 0
+                        return f"{val1}-{val2}"
                     val1 = id[0]
                     val2 = id[2]
                     
