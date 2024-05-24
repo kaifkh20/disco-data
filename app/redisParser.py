@@ -388,7 +388,16 @@ class RedisParser:
                     
                     i= 0
 
-                    if id_1=='-':
+                    if id_2=='+':
+                        while len(enteries)>i:
+                            x = enteries[i]
+                            if x['id']==id_1:
+                                while i<len(enteries):
+                                    x = enteries[i]
+                                    res_lst.append(x)
+                                    i+=1
+                            i+=1
+                    elif id_1=='-':
                         for x in enteries:
                             res_lst.append(x)
                             if x['id']==id_2:
@@ -406,6 +415,9 @@ class RedisParser:
                             i+=1
                     f.close()
                 response = RedisParser.encode.encode_list(res_lst)
+                with open("data.json",'w') as fd:
+                    fd.write("{}")
+                    fd.close()
                 return response
         def decodeSimpleString(string):
             lst = string.split("\r\n")

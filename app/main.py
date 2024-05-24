@@ -248,14 +248,18 @@ def main():
     while True:
             if not replica_of:
                 conn, adrr = server_socket.accept()
-                thread(conn).start()
+                t = thread(conn)
+                t.start()
                 print('connection established')
+                # t.join()
+                # print("file removed")
+                # atexit.register(delete_file,"../data.json")
 
-
+    
 def delete_file(name):
     os.remove(name)
 
 if __name__ == "__main__":
     main()
-    atexit.register(delete_file,"../data.json")
+
     # atexit.register(lambda :)
