@@ -386,16 +386,23 @@ class RedisParser:
                     enteries = json_data[name]["enteries"]
                     
                     i= 0
-                    while len(enteries)>i:
-                        x = enteries[i]
-                        if x['id']==id_1:
-                            while i<len(enteries):
-                                x = enteries[i]
-                                res_lst.append(x)
-                                i+=1
-                                if x['id']==id_2:
-                                    break
-                        i+=1
+
+                    if id_1=='-':
+                        for x in enteries:
+                            res_lst.append(x)
+                            if x['id']==id_2:
+                                break
+                    else:
+                        while len(enteries)>i:
+                            x = enteries[i]
+                            if x['id']==id_1:
+                                while i<len(enteries):
+                                    x = enteries[i]
+                                    res_lst.append(x)
+                                    i+=1
+                                    if x['id']==id_2:
+                                        break
+                            i+=1
                     f.close()
                 response = RedisParser.encode.encode_list(res_lst)
                 return response
