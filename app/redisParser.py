@@ -35,7 +35,28 @@ class RedisReplica:
 class RedisParser:
     class encode :
 
-
+        def encode_list(res_lst):
+            res_lst_encoded = []
+            for x in res_lst:
+                lst_encoded = []
+                lst_encoded.append([x['id']])
+                for k in x:
+                    if k == 'id':continue
+                    lst_encoded[0].append([k])
+                    lst_encoded[0][1].append(x[k])
+                res_lst_encoded.append(lst_encoded.pop(0))
+            # print(res_lst_encoded)
+            
+            res_lst_array_encoded = []
+            for x in res_lst_encoded:
+                response = RedisParser.encode.encode_array(x)
+                res_lst_array_encoded.append(response)
+            length = len(res_lst_array_encoded)
+            print(length,res_lst_array_encoded)
+            response_string = f"*{length}\r\n"
+            for x in res_lst_array_encoded:
+                response_string+=x
+            return response_string
         def simple_error(err):
             return f"-{err}\r\n"
 
@@ -66,6 +87,11 @@ class RedisParser:
             length = len(string)
             res = "*"+str(length)+"\r\n"
             for x in string :
+                res_array_string = ""
+                if type(x) is list:
+                    res_array_string = RedisParser.encode.encode_array(x)
+                    res+=res_array_string
+                    continue
                 lengthString = str(len(x))                
                 res+="$"+lengthString+"\r\n"+x+"\r\n"
             # res+="\r\n"
@@ -321,6 +347,7 @@ class RedisParser:
                     return RedisParser.encode.simple_error(err="ERR The ID specified in XADD must be greater than 0-0")
 
                 if(not validate_id(id=id,name=name)):
+                    print('reaching second error')
                     return RedisParser.encode.simple_error(err="ERR The ID specified in XADD is equal or smaller than the target stream top item")
                 
                 i = 0
@@ -340,8 +367,38 @@ class RedisParser:
                         json_data.update(data)
                 with open('data.json','w+') as f:
                     json.dump(json_data,f)
-
+                print('sending id as response')
                 return RedisParser.encode.bulk_string(id)
+
+            if cmnd=="XRANGE":
+                res_lst = []
+                for x in lst:
+                    if "$" not in x:
+                        res_lst.append(x)
+                name = res_lst[0]
+                id_1 = res_lst[1]
+                id_2 = res_lst[2]
+                
+                res_lst = []
+
+                with open('data.json') as f:
+                    json_data = json.load(f)
+                    enteries = json_data[name]["enteries"]
+                    
+                    i= 0
+                    while len(enteries)>i:
+                        x = enteries[i]
+                        if x['id']==id_1:
+                            while i<len(enteries):
+                                x = enteries[i]
+                                res_lst.append(x)
+                                i+=1
+                                if x['id']==id_2:
+                                    break
+                        i+=1
+                    f.close()
+                response = RedisParser.encode.encode_list(res_lst)
+                return response
         def decodeSimpleString(string):
             lst = string.split("\r\n")
             lst = lst[0].split("+")
