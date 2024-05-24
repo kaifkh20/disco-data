@@ -339,6 +339,7 @@ class RedisParser:
                 id = cmnd_lst.pop(0)
         
                 id = auto_generated_id(id,name)
+
                 dict_key_value = {}
                 
                 print("id after autogeneration",id)
