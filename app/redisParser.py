@@ -8,6 +8,9 @@ from time import sleep, time
 from .rdbParser import RDB_PARSER
 import math
 
+
+BLOCKING = True
+
 EMPTY_RDB_FILE = b"UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog=="
 
 def create_random():
@@ -185,6 +188,7 @@ class RedisParser:
         def executeCommand(cmnd,lst,replica=False,bytes_recv=0):
             # print(cmnd,lst)
             global BYTES_RECIEVED
+            global BLOCKING
             if(cmnd=='ECHO'):
                 # print(lst[1])
                 word = lst[1]     
@@ -294,7 +298,7 @@ class RedisParser:
                         return RedisParser.encode.simple_string("string")
                     return response
             if cmnd == "XADD": 
-
+                
                 def auto_generated_id(id,name):
                     global time
                     if id=="*":
@@ -376,6 +380,9 @@ class RedisParser:
                 with open('data.json','w+') as f:
                     json.dump(json_data,f)
                 print('sending id as response')
+                # global BLOCKING
+                if BLOCKING==True:
+                    BLOCKING = False
                 return RedisParser.encode.bulk_string(id)
 
             if cmnd=="XRANGE":
@@ -427,6 +434,7 @@ class RedisParser:
                     fd.close()
                 return response
             if cmnd =="XREAD":
+                
                 cmnd_lst = []
                 for x in lst:
                     if '$' not in x and x!='' :
@@ -435,6 +443,11 @@ class RedisParser:
                     timeB = cmnd_lst[cmnd_lst.index('block')+1]
                     timeB = int(timeB)/1000
                     print('sleeping for',timeB)
+                    if timeB==0:
+                        BLOCKING = True
+                        while True:
+                          if BLOCKING==False:
+                              break
                     sleep(timeB)
                     
 
