@@ -6,7 +6,7 @@ import select
 import atexit
 import os
 
-from .redisParser import INFO, RDB, RDB_PARSER, RedisParser,RedisReplica
+from .redisParser import INFO, RDB, RDB_PARSER, Event, RedisParser,RedisReplica
 
 replicas_addr = []
 replica_true = False
@@ -36,6 +36,7 @@ class thread(threading.Thread):
                 continue
             cmnd = RedisParser.decode.decodeOnlyCommand(recv)
             res = ''
+                
             if cmnd!='WAIT':
                 res = RedisParser.decode.decodeArrays(recv)
             # if replica_true==True and cmnd=='SET':
@@ -251,6 +252,10 @@ def main():
                 t = thread(conn)
                 t.start()
                 print('connection established')
+                if not t.is_alive():
+                    with open('data.json') as f:
+                        f.write('{}')
+                        f.close()
                 # t.join()
                 # print("file removed")
                 # atexit.register(delete_file,"../data.json")
