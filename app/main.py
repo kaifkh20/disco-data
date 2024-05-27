@@ -261,7 +261,7 @@ def delete_file(name):
     os.remove(name)
 
 if __name__ == "__main__":
-    with open('data.json') as f:
+    with open('data.json','w+') as f:
         f.write('{}')
         f.close()
     main()
