@@ -1,5 +1,3 @@
-[![progress-banner](https://backend.codecrafters.io/progress/redis/bb559497-c5fd-4e84-b125-d827d33f47a6)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
-
 <h1>Disco Data</h1>
 This a basic implementation of Redis in Python.
 
@@ -11,7 +9,8 @@ exec python3 -m app.main "$@"
 ```
 
 
-**Note**: If you're viewing this repo on GitHub, head over to
+
+**Note**: You can build your own here::
 [codecrafters.io](https://codecrafters.io) to try the challenge.
 
 ```
