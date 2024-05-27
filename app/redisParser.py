@@ -1,6 +1,6 @@
 import json
 import os
-from threading import Timer
+from threading import Event, Timer
 import string
 import secrets
 import base64
@@ -431,7 +431,11 @@ class RedisParser:
                 for x in lst:
                     if '$' not in x and x!='' :
                         cmnd_lst.append(x)
-
+                if 'block' in cmnd_lst:
+                    time = cmnd_lst[cmnd_lst.index('block')+1]
+                    Event.wait(time/1000)
+                    cmnd_lst.pop(0)
+                    cmnd_lst.pop(0)
                 res_lst = []
                 cmnd_lst.pop(0)
                 name_lst = []
