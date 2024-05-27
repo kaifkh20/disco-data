@@ -1,43 +1,18 @@
 [![progress-banner](https://backend.codecrafters.io/progress/redis/bb559497-c5fd-4e84-b125-d827d33f47a6)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
-This is a starting point for Python solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+<h1>Disco Data</h1>
+This a basic implementation of Redis in Python.
 
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
+<h2>How to Run??</h2>
+<p>Just run the this command</p>
+```
+exec python3 -m app.main "$@"
+
+```
+
 
 **Note**: If you're viewing this repo on GitHub, head over to
 [codecrafters.io](https://codecrafters.io) to try the challenge.
-
-# Passing the first stage
-
-The entry point for your Redis implementation is in `app/main.py`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
-
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
-```
-
-That's all!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `python (3.x)` installed locally
-1. Run `./spawn_redis_server.sh` to run your Redis server, which is implemented
-   in `app/main.py`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
-
-# Troubleshooting
-
-## module `socket` has no attribute `create_server`
-
-When running your server locally, you might see an error like this:
 
 ```
 Traceback (most recent call last):
@@ -57,5 +32,3 @@ might be running an older version.
 
 You can fix this by installing Python 3.8 locally and using that.
 
-If you'd like to use a different version of Python, change the `language_pack`
-value in `codecrafters.yml`.
