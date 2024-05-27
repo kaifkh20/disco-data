@@ -6,7 +6,7 @@ import secrets
 import base64
 from time import time
 from .rdbParser import RDB_PARSER
-
+import math
 
 EMPTY_RDB_FILE = b"UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog=="
 
@@ -36,7 +36,9 @@ class RedisParser:
     class encode :
         
         def xrange_encode(res_string,name):
-            return f"*1\r\n*2\r\n${len(name)}\r\n{name}\r\n{res_string}"
+            for k in name:
+                name = k
+            return f"*2\r\n${len(name)}\r\n{name}\r\n{res_string}"
 
         def encode_list(res_lst):
             res_lst_encoded = []
@@ -59,7 +61,9 @@ class RedisParser:
             response_string = f"*{length}\r\n"
             for x in res_lst_array_encoded:
                 response_string+=x
+            # print('list',response_string)
             return response_string
+
         def simple_error(err):
             return f"-{err}\r\n"
 
@@ -427,23 +431,61 @@ class RedisParser:
                 for x in lst:
                     if '$' not in x and x!='' :
                         cmnd_lst.append(x)
-                name = cmnd_lst[1]
-                id = cmnd_lst[2]
+
                 res_lst = []
+                cmnd_lst.pop(0)
+                name_lst = []
+                i = 0
+                print(cmnd_lst)
+                while int(math.ceil(len(cmnd_lst)/2))>i:
+                    name_lst.append({cmnd_lst[i]:""})
+                    i+=1
+                # print(i,'index')
+                n_idx = 0
+                while len(cmnd_lst)>i:
+                    dict_key = name_lst[n_idx]
+                    # print(dict_key,'dict_key')
+                    for k in dict_key:
+                        dict_key[k] = cmnd_lst[i]
+                    i+=1
+                    n_idx+=1
+                print(name_lst)
                 with open('data.json') as f:
                     json_data = json.load(f)
-                    if name in json_data:
-                        enteries = json_data[name]['enteries']
-                        for x in enteries:
-                            id_int = f"{x['id'][0]}.{x['id'][2]}"
-                            id_int = float(id_int)
-                            id_int_given = f"{id[0]}.{id[2]}"
-                            id_int_given = float(id_int_given)
-                            print(id_int,id_int_given)
-                            if id_int>id_int_given:
-                               res_lst.append(x)
-                res_string = RedisParser.encode.encode_list(res_lst)
-                res_string = RedisParser.encode.xrange_encode(res_string,name)
+                    for name_array in name_lst:
+                        for name in name_array:
+                            if name in json_data:
+                                enteries = json_data[name]['enteries']
+                                id = name_array[name]
+                                res_lst_temp = []
+                                for x in enteries:
+                                    id_int = f"{x['id'][0]}.{x['id'][2]}"
+                                    id_int = float(id_int)
+                                    id_int_given = f"{id[0]}.{id[2]}"
+                                    id_int_given = float(id_int_given)
+                                    # print(id_int,id_int_given)
+                                    if id_int>id_int_given:
+                                        res_lst_temp.append(x)
+                                res_lst.append(res_lst_temp)
+                # print(res_lst)
+                res_string = ''
+                i = 0
+                for x in res_lst:
+                    res_string_lst = RedisParser.encode.encode_list(x)
+                    res_string_lst = f'{res_string_lst[4:]}'
+                    res_string_lst = f'*{len(x)}\r\n{res_string_lst}'
+                    # print(res_string)
+                    for name in name_lst[i]:
+                        # print(name)
+                        res_string_lst =  f'*2\r\n${len(name)}\r\n{name}\r\n{res_string_lst}'
+                    # print('before xrange',res_string)
+                    # res_string += RedisParser.encode.xrange_encode(res_string,name_lst[i])
+                    # prnt('after xrange',res_string)
+                    res_string = f'{res_string}{res_string_lst}'
+                    # print('after',res_string)        
+                    i+=1
+                
+                res_string = f"*{len(name_lst)}\r\n{res_string}"
                 with open('data.json','w+') as f:
                     f.write("{}")
                     f.close()
