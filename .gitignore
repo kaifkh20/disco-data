@@ -153,5 +153,5 @@ dmypy.json
 cython_debug/
 
 .vscode
-dump.rdb
-codecrafters.yml
+.dump.rdb
+.codecrafters.yml
