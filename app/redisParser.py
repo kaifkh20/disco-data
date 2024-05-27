@@ -34,6 +34,9 @@ class RedisReplica:
 
 class RedisParser:
     class encode :
+        
+        def xrange_encode(res_string,name):
+            return f"*1\r\n*2\r\n${len(name)}\r\n{name}\r\n{res_string}"
 
         def encode_list(res_lst):
             res_lst_encoded = []
@@ -419,6 +422,30 @@ class RedisParser:
                     fd.write("{}")
                     fd.close()
                 return response
+            if cmnd =="XREAD":
+                cmnd_lst = []
+                for x in lst:
+                    if '$' not in x and x!='' :
+                        cmnd_lst.append(x)
+                name = cmnd_lst[1]
+                id = cmnd_lst[2]
+                res_lst = []
+                with open('data.json') as f:
+                    json_data = json.load(f)
+                    if name in json_data:
+                        enteries = json_data[name]['enteries']
+                        for x in enteries:
+                            id_int = f"{x['id'][0]}.{x['id'][2]}"
+                            id_int = float(id_int)
+                            id_int_given = f"{id[0]}.{id[2]}"
+                            id_int_given = float(id_int_given)
+                            print(id_int,id_int_given)
+                            if id_int>id_int_given:
+                               res_lst.append(x)
+                res_string = RedisParser.encode.encode_list(res_lst)
+                res_string = RedisParser.encode.xrange_encode(res_string,name)
+                return res_string
+
         def decodeSimpleString(string):
             lst = string.split("\r\n")
             lst = lst[0].split("+")
