@@ -434,11 +434,15 @@ class RedisParser:
                     fd.close()
                 return response
             if cmnd =="XREAD":
-                
+                dollar_as_id = False 
+                if '$' in lst:
+                    dollar_as_id = True
                 cmnd_lst = []
                 for x in lst:
                     if '$' not in x and x!='' :
                         cmnd_lst.append(x)
+                if dollar_as_id:
+                    cmnd_lst.append('$')
                 if 'block' in cmnd_lst:
                     timeB = cmnd_lst[cmnd_lst.index('block')+1]
                     timeB = int(timeB)/1000
@@ -464,11 +468,23 @@ class RedisParser:
                     i+=1
                 # print(i,'index')
                 n_idx = 0
+                # print(name_lst)
                 while len(cmnd_lst)>i:
                     dict_key = name_lst[n_idx]
                     # print(dict_key,'dict_key')
                     for k in dict_key:
-                        dict_key[k] = cmnd_lst[i]
+                        if cmnd_lst[i]=='$':
+                            #finding max id
+                            with open('data.json') as f:
+                                json_data = json.load(f)
+                                enteries = json_data[k]['enteries']
+                                idx = 0
+                                while len(enteries)-2>idx:
+                                    idx+=1
+                                dict_key[k] = enteries[idx]['id']
+                        else: 
+                            dict_key[k] = cmnd_lst[i]
+                    
                     i+=1
                     n_idx+=1
                 print(name_lst)
