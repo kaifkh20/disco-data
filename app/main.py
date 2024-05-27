@@ -252,19 +252,18 @@ def main():
                 t = thread(conn)
                 t.start()
                 print('connection established')
-                if not t.is_alive():
-                    with open('data.json') as f:
-                        f.write('{}')
-                        f.close()
                 # t.join()
                 # print("file removed")
                 # atexit.register(delete_file,"../data.json")
-
+    print('end of while loop')
     
 def delete_file(name):
     os.remove(name)
 
 if __name__ == "__main__":
+    with open('data.json') as f:
+        f.write('{}')
+        f.close()
     main()
 
     # atexit.register(lambda :)
