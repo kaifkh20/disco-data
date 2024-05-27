@@ -444,6 +444,9 @@ class RedisParser:
                                res_lst.append(x)
                 res_string = RedisParser.encode.encode_list(res_lst)
                 res_string = RedisParser.encode.xrange_encode(res_string,name)
+                with open('data.json','w+') as f:
+                    f.write("{}")
+                    f.close()
                 return res_string
 
         def decodeSimpleString(string):
