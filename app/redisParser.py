@@ -1,10 +1,10 @@
 import json
 import os
-from threading import Event, Timer
+from threading import Event, Thread, Timer
 import string
 import secrets
 import base64
-from time import time
+from time import sleep, time
 from .rdbParser import RDB_PARSER
 import math
 
@@ -432,10 +432,15 @@ class RedisParser:
                     if '$' not in x and x!='' :
                         cmnd_lst.append(x)
                 if 'block' in cmnd_lst:
-                    time = cmnd_lst[cmnd_lst.index('block')+1]
-                    Event.wait(time/1000)
+                    timeB = cmnd_lst[cmnd_lst.index('block')+1]
+                    timeB = int(timeB)/1000
+                    print('sleeping for',timeB)
+                    sleep(timeB)
+                    
+
                     cmnd_lst.pop(0)
                     cmnd_lst.pop(0)
+                print('got out of sleeping')
                 res_lst = []
                 cmnd_lst.pop(0)
                 name_lst = []
@@ -472,6 +477,10 @@ class RedisParser:
                                         res_lst_temp.append(x)
                                 res_lst.append(res_lst_temp)
                 # print(res_lst)
+                
+                if(res_lst==[]):
+                    return RedisParser.encode.null()
+
                 res_string = ''
                 i = 0
                 for x in res_lst:
@@ -488,7 +497,7 @@ class RedisParser:
                     res_string = f'{res_string}{res_string_lst}'
                     # print('after',res_string)        
                     i+=1
-                
+                 
                 res_string = f"*{len(name_lst)}\r\n{res_string}"
                 with open('data.json','w+') as f:
                     f.write("{}")
