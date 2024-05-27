@@ -3,9 +3,9 @@ This a basic implementation of Redis in Python.
 
 <h2>How to Run??</h2>
 <p>Just run the this command</p>
+
 ```
 exec python3 -m app.main "$@"
-
 ```
 
 
